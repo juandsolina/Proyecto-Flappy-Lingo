@@ -9,11 +9,13 @@ from routes.progress    import router as progress_router
 from routes.leaderboard import router as leaderboard_router
 from routes.vocabulary  import router as vocabulary_router
 from routes.questions   import router as questions_router
+from routes.custom_vocabulary import router as custom_vocabulary_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if not os.path.exists(DB_PATH):
-        init_db()
+    # Run schema initialization on every startup so CREATE TABLE IF NOT EXISTS
+    # migrations are applied even when the DB file already exists.
+    init_db()
     yield
 
 
@@ -31,6 +33,7 @@ app.include_router(progress_router,    prefix="/api/progress")
 app.include_router(leaderboard_router, prefix="/api/leaderboard")
 app.include_router(vocabulary_router,  prefix="/api/ai/vocabulary")
 app.include_router(questions_router,   prefix="/api/v1")
+app.include_router(custom_vocabulary_router, prefix="/api/custom-vocabulary")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)

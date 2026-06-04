@@ -44,3 +44,37 @@ class VocabularyResponse(BaseModel):
     success: bool
     data: Optional[dict] = None
     message: Optional[str] = None
+
+class CustomVocabularyCreateRequest(BaseModel):
+    word_in_spanish: str
+    correct_answer: str
+    wrong_answer: str
+    category: str
+
+class CustomVocabularyUpdateRequest(BaseModel):
+    word_in_spanish: Optional[str] = None
+    correct_answer: Optional[str] = None
+    wrong_answer: Optional[str] = None
+    category: Optional[str] = None
+
+class CustomVocabularyItem(BaseModel):
+    id: int
+    user_id: str
+    word_in_spanish: str
+    correct_answer: str
+    wrong_answer: str
+    category: str
+    created_at: str
+    updated_at: str
+
+class CustomVocabularyListResponse(BaseModel):
+    success: bool
+    data: List[CustomVocabularyItem]
+
+class CustomVocabularySingleResponse(BaseModel):
+    success: bool
+    data: CustomVocabularyItem
+
+class CustomVocabularyMutationResponse(BaseModel):
+    success: bool
+    message: str

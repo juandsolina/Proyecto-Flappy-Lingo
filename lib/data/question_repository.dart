@@ -9,7 +9,7 @@ abstract class QuestionSource {
   Future<QuestionModel> fetchQuestion({String category});
 }
 
-class _GeminiQuestionSource implements QuestionSource {
+class _ApiQuestionSource implements QuestionSource {
   @override
   Future<QuestionModel> fetchQuestion({String category = 'mixed'}) async {
     final uri = Uri.parse(
@@ -150,7 +150,7 @@ class _LocalQuestionSource implements QuestionSource {
 }
 
 class QuestionRepository {
-  final QuestionSource _primary = _GeminiQuestionSource();
+  final QuestionSource _primary = _ApiQuestionSource();
   final QuestionSource _fallback = _LocalQuestionSource();
 
   Future<List<QuestionModel>> _fetchQuestionsBatch({

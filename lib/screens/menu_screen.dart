@@ -5,6 +5,7 @@ import '../screens/login_screen.dart';
 import '../screens/leaderboard_screen.dart';
 import '../screens/stats_screen.dart';
 import '../screens/profile_screen.dart';
+import '../screens/vocabulary_crud_screen.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -114,6 +115,13 @@ class _MenuScreenState extends State<MenuScreen> {
                       label: 'Perfil',
                       color: const Color(0xFF6A1B9A),
                       onTap: () => _navigate(const ProfileScreen()),
+                    ),
+                    const SizedBox(height: 16),
+                    _MenuButton(
+                      icon: '📝',
+                      label: 'CRUD Vocabulario',
+                      color: const Color(0xFF00897B),
+                      onTap: () => _navigate(const VocabularyCrudScreen()),
                     ),
                     const SizedBox(height: 32),
                     // Cerrar sesión

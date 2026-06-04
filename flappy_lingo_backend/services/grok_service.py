@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MODEL_NAME = os.getenv("GEMINI_MODEL", "grok-3-mini").strip()
+MODEL_NAME = os.getenv("GROQ_MODEL", "grok-3-mini").strip()
 XAI_API_KEY = os.getenv("XAI_API_KEY", "").strip()
 XAI_BASE_URL = os.getenv("XAI_BASE_URL", "https://api.x.ai/v1").rstrip("/")
 

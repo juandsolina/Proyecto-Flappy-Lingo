@@ -23,4 +23,7 @@ class AppConfig {
   static String get questionEndpoint => "$baseUrl/api/v1/question";
 
   static String get questionsBatchEndpoint => "$baseUrl/api/v1/questions-batch";
+
+  static String get customVocabularyEndpoint =>
+      "$baseUrl/api/custom-vocabulary";
 }

@@ -1,6 +1,6 @@
 // models/question_model.dart
 // Representa una pregunta educativa con su respuesta correcta y un distractor.
-// Diseñado para ser compatible con la respuesta JSON de la API Gemini.
+// Diseñado para ser compatible con la respuesta JSON de la API del backend.
 
 class QuestionModel {
   /// Palabra o frase en español que se muestra en pantalla.
@@ -22,7 +22,7 @@ class QuestionModel {
     required this.category,
   });
 
-  // ── Serialización JSON (compatible con respuesta de Gemini API) ──────────
+  // ── Serialización JSON (compatible con respuesta del backend) ─────────────
   // Ejemplo de JSON esperado del backend:
   // {
   //   "word_in_spanish": "Perro",

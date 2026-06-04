@@ -54,6 +54,24 @@ def init_db():
             saved_at    TEXT DEFAULT (datetime('now')),
             FOREIGN KEY (user_id) REFERENCES users(id)
         );
+
+        CREATE TABLE IF NOT EXISTS custom_vocabulary (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id           TEXT NOT NULL,
+            word_in_spanish   TEXT NOT NULL,
+            correct_answer    TEXT NOT NULL,
+            wrong_answer      TEXT NOT NULL,
+            category          TEXT NOT NULL,
+            created_at        TEXT DEFAULT (datetime('now')),
+            updated_at        TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_custom_vocabulary_user
+            ON custom_vocabulary (user_id);
+
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_custom_vocabulary_unique_per_user
+            ON custom_vocabulary (user_id, word_in_spanish, category);
     """)
 
     conn.commit()
