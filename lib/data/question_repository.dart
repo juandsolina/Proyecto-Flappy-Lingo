@@ -153,6 +153,55 @@ class QuestionRepository {
   final QuestionSource _primary = _GeminiQuestionSource();
   final QuestionSource _fallback = _LocalQuestionSource();
 
+  Future<List<QuestionModel>> _fetchQuestionsBatch({
+    required int count,
+    required String category,
+  }) async {
+    final uri = Uri.parse(
+      '${AppConfig.questionsBatchEndpoint}?category=$category&count=$count',
+    );
+
+    final response = await http.get(uri).timeout(
+          const Duration(seconds: 12),
+        );
+
+    if (response.statusCode != 200) {
+      throw Exception('Batch error ${response.statusCode}: ${response.body}');
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw Exception('Batch response is not a JSON object');
+    }
+
+    final questionsRaw = decoded['questions'];
+    if (questionsRaw is! List) {
+      throw Exception('Batch response has no questions list');
+    }
+
+    return questionsRaw
+        .whereType<Map<String, dynamic>>()
+        .map(QuestionModel.fromJson)
+        .toList();
+  }
+
+  Future<List<QuestionModel>> _localFill({
+    required int count,
+    required String category,
+  }) async {
+    final uniqueByWord = <String, QuestionModel>{};
+    int attempts = 0;
+    final maxAttempts = count * 3;
+
+    while (uniqueByWord.length < count && attempts < maxAttempts) {
+      final q = await _fallback.fetchQuestion(category: category);
+      uniqueByWord.putIfAbsent(_questionKey(q), () => q);
+      attempts++;
+    }
+
+    return uniqueByWord.values.take(count).toList();
+  }
+
   static String _questionKey(QuestionModel question) {
     return '${question.category.trim().toLowerCase()}|'
         '${question.wordInSpanish.trim().toLowerCase()}';
@@ -183,37 +232,37 @@ class QuestionRepository {
     String category = 'mixed',
   }) async {
     final normalized = _normalizeCategory(category);
-    final initialBatch = await Future.wait(
-      List.generate(count, (_) => getQuestion(category: normalized)),
-    );
+    if (_isPlaceholderConfig) {
+      return _localFill(count: count, category: normalized);
+    }
 
     final uniqueByWord = <String, QuestionModel>{};
-    for (final question in initialBatch) {
-      uniqueByWord.putIfAbsent(_questionKey(question), () => question);
-    }
 
-    int attempts = 0;
-    final maxAttempts = count * 2;
-    while (uniqueByWord.length < count && attempts < maxAttempts) {
-      final missing = count - uniqueByWord.length;
-      final batchSize = missing > 4 ? 4 : missing;
-      final extraBatch = await Future.wait(
-        List.generate(batchSize, (_) => getQuestion(category: normalized)),
+    try {
+      final batch = await _fetchQuestionsBatch(
+        count: count,
+        category: normalized,
       );
-
-      for (final question in extraBatch) {
+      for (final question in batch) {
         uniqueByWord.putIfAbsent(_questionKey(question), () => question);
       }
-      attempts++;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[QuestionRepository] Batch preload failed: $e');
+      }
     }
 
-    final result = uniqueByWord.values.take(count).toList();
-
-    while (result.length < count) {
-      result.add(await getQuestion(category: normalized));
+    if (uniqueByWord.length < count) {
+      final localExtra = await _localFill(
+        count: count - uniqueByWord.length,
+        category: normalized,
+      );
+      for (final question in localExtra) {
+        uniqueByWord.putIfAbsent(_questionKey(question), () => question);
+      }
     }
 
-    return result;
+    return uniqueByWord.values.take(count).toList();
   }
 
   Future<QuestionModel> getQuestion({String category = 'mixed'}) async {

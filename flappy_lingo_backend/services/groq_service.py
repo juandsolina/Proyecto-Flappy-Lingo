@@ -69,6 +69,7 @@ import os
 import json
 import re
 import random
+import time
 from collections import defaultdict, deque
 import requests
 from dotenv import load_dotenv
@@ -312,7 +313,32 @@ def _generate_with_groq(
         "Content-Type": "application/json",
     }
 
-    response = requests.post(url, headers=headers, json=payload, timeout=20)
+    max_retries = 2
+    response = None
+    for attempt in range(max_retries + 1):
+        response = requests.post(url, headers=headers, json=payload, timeout=20)
+
+        if response.status_code != 429 or attempt >= max_retries:
+            break
+
+        body = (response.text or "").strip()
+        retry_after = response.headers.get("Retry-After", "").strip()
+        wait_seconds = 2.0
+
+        if retry_after:
+            try:
+                wait_seconds = float(retry_after)
+            except ValueError:
+                wait_seconds = 2.0
+        else:
+            match = re.search(r"try again in\s*(\d+(?:\.\d+)?)s", body, re.IGNORECASE)
+            if match:
+                wait_seconds = float(match.group(1))
+
+        wait_seconds = max(1.0, min(wait_seconds, 10.0))
+        print(f"[Groq] 429 rate limit, retrying in {wait_seconds:.1f}s (attempt {attempt + 1}/{max_retries})")
+        time.sleep(wait_seconds)
+
     try:
         response.raise_for_status()
     except requests.HTTPError as exc:
